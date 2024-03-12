@@ -1,0 +1,6 @@
+Augusto_Guedes augusto 0 pass1 1
+Arthur_Marques marquesArthur 0 pass2 0
+Rafael_Pereira rafael 1 pass2 0
+Rafaela_Goes rafaela 0 pass3 0
+Ursula_Ferreira ursulaf 0 pass4 0
+Marcelo_Cruz_De_Almeira marceloCruz 0 pass5 0
