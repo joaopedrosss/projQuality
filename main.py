@@ -1,8 +1,17 @@
 from Carro import Carro,ListaCarros
 from Usuario import Usuario, ListaUsuario,Admin
-from Menu import Menu,MenuUsuario, MenuAdmin
+#from Menu import Menu,MenuUsuario, MenuAdmin
 from Login import Login
+from Usuario_State import UsuarioState
+from os import system,name
 
+
+def limparTela():
+        cmd = input("<Aperte qualquer botão para voltar ao menu principal>")
+        if(name == "nt"): #windows
+            system("cls")
+        else:
+            system("clear")
 
 def simOUnao(acao):
   
@@ -23,9 +32,9 @@ def simOUnao(acao):
 
 lista_de_carros = ListaCarros()
 lista_de_usuarios = ListaUsuario()
-menu_de_opcoes = Menu()
-menu_de_usuario = MenuUsuario()
-menu_de_admin = MenuAdmin()
+#menu_de_usuario = MenuUsuario()
+
+
 
 
 login = Login()
@@ -83,287 +92,102 @@ usersFile.close()
 
 # _ TODO->ELIMINAR TRECHO ABAIXO (TESTES SOMENTE) 
 
-"""
-usuario_temp = Usuario()
-usuario_temp = usuario_temp.selecionarEm(lista_de_usuarios)
 
-login.setSession(True)
-login.setUserInSession(usuario_temp)
-menu_de_opcoes.limparTela()
-"""
+option = UsuarioState(lista_de_usuarios,lista_de_carros)
 
 # _ SEM LOGIN
 
 while True:
-
-  if(sair):
-    break
-
-  if(login.getSession()): # _ COM LOGIN
+    if(sair):
+      break
+  
     usuario_atual = login.getUserInSession()
-    
-    print("U: {} @{}".format(usuario_atual.getNome(),usuario_atual.getId()))
 
-    if(usuario_atual.getAdmin()): # _ COM LOGIN DE ADMIN
-      print("->[admin]\n--------")
-      menu_de_admin.mostrar()
+     # DEFINIR O ESTADO
+    if(usuario_atual == None):
+      option.changeToNoLogin()
+      option.setUsuarioAtual(usuario_atual)
+    else:
+      print("U: {} @{}".format(usuario_atual.getNome(),usuario_atual.getId()))
 
-      action = input(">")
-      try:
-        action = int(action)  
-      except:
-        print("Valor inválido. Digite novamente")
+      option.setUsuarioAtual(usuario_atual)
+      if(usuario_atual.getAdmin()):
+        option.changeToAdmin()
+        print("->[admin]\n--------")
+      else:
+        option.changeToComum()
 
-      match action:
-        case 0:
-          break
+    option.menu()
 
-        case 1:# MOSTRAR CARROS *
-          lista_de_carros.mostrar()
-        
-        case 2:# PROCURAR CARROS *
-          carro_procurado = lista_de_carros.criarCarroParaPesquisa()
-        
-          if(carro_procurado != None):
-            carros_encontrados = lista_de_carros.procurar(carro_procurado)
-            lista_de_carros.mostrarCarrosEncontrados(carros_encontrados)
-        
-        case 3: # ALUGUEL * 
-
-          print("--- ALUGUEL  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros)
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("alugar {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-
-              print("Para quem deseja alugar?")
-              print("[0] Eu mesmo")
-              print("[1] Outro usuário")
-
-              try:
-                alugarParaOutro = int(input("[0/1] >"))
-              except:
-                print("Valor inválido")
-
-              if(not(alugarParaOutro)):
-                usuario_atual.alugarCarro(carro_selecionado)
-              else:
-                usuario_para_alugar = usuario_atual.selecionarEm(lista_de_usuarios)
-
-                asw_1 = simOUnao("alugar '{}' para '{}'".format(carro_selecionado.mostrar(),usuario_para_alugar.getNome()))
-
-                if(asw_1):
-                  usuario_para_alugar.alugarCarro(carro_selecionado)
-                else:
-                  print("AÇÃO CANCELADA")
-
-            else:
-              print("AÇÃO CANCELADA!")
-
-        case 4: # DEVOLUÇÃO
-          print("--- DEVOLUÇÃO  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros) # TODO uma função filter?
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("devolver {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-              if(carro_selecionado.getDono() == usuario_atual.getId()):
-                usuario_atual.devolverCarro(carro_selecionado)
-              else:
-                usuario_escolhido = lista_de_usuarios.getById(carro_selecionado.getDono())
-
-                if(usuario_escolhido != None):
-                  usuario_escolhido.devolverCarro(carro_selecionado)
-                else:
-                  print("Não foi possível devolver o carro.")
-            else:
-              print("AÇÃO CANCELADA!")
-
-        case 5: # MOSTRAR USUÁRIOS 
-
-          #lista_de_usuarios.mostrar()
-          usuario_atual.mostrarUsuarios(lista_de_usuarios)
-        
-        case 6: # CADASTRAR CARRO 
-          usuario_atual.cadastarCarro(lista_de_carros)
-
-        case 8: # CADASTRAR USUÁRIO 
-          usuario_atual.cadastrarUsuario(lista_de_usuarios)
-        
-        case 7: # EDITAR CARRO
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros)
-
-          if(carro_selecionado.getAlugado()):
-            print("Não é possível editar os dados de um carro já alugado.\nÉ preciso que o veículo seja devolvido antes.")
-          else:
-            usuario_atual.editarCarro(carro_selecionado)
-
-
-        case 9: # EDITAR USUARIO
-          usuario_escolhido = usuario_atual.selecionarEm(lista_de_usuarios)
-
-          usuario_atual.editarUsuario(usuario_escolhido,lista_de_usuarios)
-
-
-        case 11:
-          usuario_atual.removeCarro(lista_de_carros)
-
-        case 10:
-          usuario_atual.removerUser(lista_de_usuarios)
-
-        case 12:
-          print("Encerrar sessão")
-          print("----------")
-          print("Tem certeza que quer deslogar no sistema?")
-          
-          aws = input("[s/n]> ").lower()
-
-          if(aws == "s"):
-            usuario_atual.deslogar()
-            login.setSession(False)
-            login.setUserInSession(None)
-            #menu_de_opcoes.limparTela()
-            #pass
-
-    else: # _ COM LOGIN COMUM
-      print("--------")
-      menu_de_usuario.mostrar()
-
-      action = input(">")
-      try:
-        action = int(action)  
-      except:
-        print("Valor inválido. Digite novamente")
-
-      match action:
-        case 0:
-          break
-        case 1: # MOSTRAR CARROS
-          lista_de_carros.mostrar()
-        
-        case 2: # PROCURAR CARROS
-          carro_procurado = lista_de_carros.criarCarroParaPesquisa()
-        
-          if(carro_procurado != None):
-            carros_encontrados = lista_de_carros.procurar(carro_procurado)
-            lista_de_carros.mostrarCarrosEncontrados(carros_encontrados)
-
-        case 3: # ALUGAR 
-          print("--- ALUGUEL  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros)
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("alugar {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-              usuario_atual.alugarCarro(carro_selecionado)
-            else:
-              print("AÇÃO CANCELADA!")
-
-        case 4: # DEVOLVER 
-          print("--- DEVOLUÇÃO  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros) # TODO uma função filter?
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("devolver {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-              usuario_atual.devolverCarro(carro_selecionado)
-            else:
-              print("AÇÃO CANCELADA!")
-        
-        case 5:# VER CARROS 
-          usuario_atual.mostrarCarrosAlugados()
-
-        case 6:
-          print("Encerrar sessão")
-          print("----------")
-          print("Tem certeza que quer deslogar no sistema?")
-          
-          aws = input("[s/n]> ").lower()
-
-          if(aws == "s"):
-            usuario_atual.deslogar()
-            login.setSession(False)
-            login.setUserInSession(None)
-            #menu_de_opcoes.limparTela()
-            #pass
-
-        case _:
-          print("Ação Inválida")
-
-    menu_de_usuario.limparTela()    
-
-  else: # _ SEM LOGIN
-    #menu_de_usuario.mostrar()
-    print("------\nOlá!\nBem vindo!\nPode fazer o login no sistema com um desses usuários:\nUsuario Admin - <id>: augusto <senha>: pass1\nUsuário - <id>: ursulaf <senha>: pass4\n------")
-    menu_de_opcoes.mostrar()
-    
     action = input(">")
     try:
       action = int(action)  
     except:
       print("Valor inválido. Digite novamente")
-    match action:
-      case 0:
-        sair = True
-        break
 
-      case 1: # MOSTRAR CARRO
-        lista_de_carros.mostrar()
-      
-      case 2:# PROCURAR CARROS
+    if(usuario_atual == None):
+      if(action == 13):
+        action = 78
+      if (action == 3):
+        action = 13
+
+    if(usuario_atual != None):
+      if(action == 6 and not(usuario_atual.getAdmin())):
+        action = 13
+      if(action == 13 and not(usuario_atual.getAdmin())):
+        action = 90
+    
+    match action:
+      case 0: # SAIR
+        break
+      case 1:#  Listar veículos
+          lista_de_carros.mostrar()
+        
+      case 2:# Procurar veículos
         carro_procurado = lista_de_carros.criarCarroParaPesquisa()
         
         if(carro_procurado != None):
           carros_encontrados = lista_de_carros.procurar(carro_procurado)
-
           lista_de_carros.mostrarCarrosEncontrados(carros_encontrados)
 
-        pass
+      case 3:# Alugar veículo
+        option.alugar()
       
-      case 3:
-        print("Login no sistema")
-        print("---------------")
-        print("Insira:")
-        user_id = input("Id de Usuário: ")
-        user_pass = input("Senha: ")
-
-        user_maybe = Usuario("",user_id,False,user_pass)
-
-        user_in = login.validateUser(user_maybe,lista_de_usuarios)
-
-        if(user_in == None):
-          print("Usuário não encontrado.\nLogin ou senha incorretos.")
-        else:
-          print("Login com sucesso!\n Olá,{}!".format(user_in.getNome()))
-          user_in.logar()
-          login.setSession(True)
-          login.setUserInSession(user_in)
-
-          #menu_de_opcoes.limparTela()
-          
-
+      case 4: # Devolver veículo
+        option.devolver()
+      
+      case 5:# Ver meus veículos alugados
+        option.mostrarAluguados()
+      
+      case 6:# Ver usuários cadastrados
+        option.mostrarUsuarios()
+      
+      case 7: # Cadastrar veículo 
+          option.cadastarCarro()
+      
+      case 8: #Editar dados de veículos
+        option.editarCarro()
+      
+      case 9: # Cadastrar usuário
+        option.cadastrarUsuario()
+      
+      case 10: # Editar dados de usuário
+        option.editarUsuario()
+      
+      case 11: #	Remover usuário
+        option.removerUsuario()
+      
+      case 12: # Remover veículo
+        option.removerCarro()
+      
+      case 13: # Deslogar
+        option.handleSessao(login,usuario_atual)
+      
       case _:
-        print("Ação invalida")
-    
-    menu_de_opcoes.limparTela()
+          print("Ação Inválida")
 
+    
+    limparTela()    
 
 # _ COM LOGIN DE USUÁRIO
 

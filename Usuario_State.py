@@ -1,3 +1,4 @@
+from Usuario import Usuario
 def simOUnao(acao):
   
   while(True):
@@ -15,9 +16,10 @@ def simOUnao(acao):
 
 class UsuarioState():
     def __init__(self,lista_de_usuarios,lista_de_carros):
-        self.usuario_comum = UsuarioComum(lista_de_carros)
-        self.usuario_admin = UsuarioAdmin(lista_de_usuarios,lista_de_carros)
-        self.state = self.usuario_comum
+        self.usuario_comum = UsuarioComum(lista_de_carros,self)
+        self.usuario_admin = UsuarioAdmin(lista_de_usuarios,lista_de_carros,self)
+        self.usuario_sem_login = UsuarioSemLogin(lista_de_usuarios,self)
+        self.state = self.usuario_sem_login
 
         self.usuario_atual = None
 
@@ -29,6 +31,9 @@ class UsuarioState():
     
     def changeToComum(self):
        self.state = self.usuario_comum
+
+    def changeToNoLogin(self):
+       self.state = self.usuario_sem_login
     
     def alugar(self):
        self.state.alugar(self.usuario_atual)
@@ -62,6 +67,9 @@ class UsuarioState():
 
     def menu(self):
        self.state.menu()
+
+    def handleSessao(self,login,usuario_atual):
+        self.state.handleSessao(login,usuario_atual)
 
 class State():
     def menu(self):
@@ -109,29 +117,55 @@ class State():
        print("Ação Inválida")
        pass
 
+    def handleSessao(self,login,usuario_atual):
+        pass
+    
+
 
 class UsuarioSemLogin(State):
+    def __init__(self,lista_de_usuarios,context:UsuarioState):
+       self.lista_de_usuarios = lista_de_usuarios
+       self.context = context
+
     def menu(self):
+    
        opcoes = ["Sair","Listar veículos","Procurar veículos","Logar no sistema"]
+
+       print("------\nOlá!\nBem vindo!\nPode fazer o login no sistema com um desses usuários:\nUsuario Admin - <id>: augusto <senha>: pass1\nUsuário - <id>: ursulaf <senha>: pass4\n------")
 
        for i,action in enumerate(opcoes):
             print("[{}] {}".format(i,action))
     
-    def handleSessao(self,usuario_atual,login):
-          print("Encerrar sessão")
-          print("----------")
-          print("Tem certeza que quer deslogar no sistema?")
-          
-          aws = input("[s/n]> ").lower()
+    def handleSessao(self,login,usuario_atual):
+        print("Login no sistema")
+        print("---------------")
+        print("Insira:")
+        user_id = input("Id de Usuário: ")
+        user_pass = input("Senha: ")
 
-          if(aws == "s"):
-            usuario_atual.deslogar()
-            login.setSession(False)
-            login.setUserInSession(None)
+        user_maybe = Usuario("",user_id,False,user_pass)
+
+        user_in = login.validateUser(user_maybe,self.lista_de_usuarios)
+
+        if(user_in == None):
+          print("Usuário não encontrado.\nLogin ou senha incorretos.")
+        else:
+          print("Login com sucesso!\n Olá,{}!".format(user_in.getNome()))
+          user_in.logar()
+          login.setSession(True)
+          login.setUserInSession(user_in)
+
+          if(user_in.getAdmin()):
+            self.context.changeToAdmin()
+          else:
+             self.context.changeToComum()
+          #b?
+        
 
 class UsuarioComum(State):
-    def __init__(self,lista_de_carros):
+    def __init__(self,lista_de_carros,context:UsuarioState):
        self.lista_de_carros = lista_de_carros
+       self.context = context
 
     def menu(self):
        opcoes = ["Sair","Listar veículos","Procurar veículos","Alugar veículo","Devolver veículo","Ver meus veículos alugados","Deslogar no sistema"]
@@ -189,12 +223,27 @@ class UsuarioComum(State):
     
     def mostrarAluguados(self,usuario_atual):
        usuario_atual.mostrarCarrosAlugados()
+    
+    def handleSessao(self,login,usuario_atual):
+          print("Encerrar sessão")
+          print("----------")
+          print("Tem certeza que quer deslogar no sistema?")
+          
+          aws = input("[s/n]> ").lower()
+
+          if(aws == "s"):
+            usuario_atual.deslogar()
+            login.setSession(False)
+            login.setUserInSession(None)
+            self.context.changeToNoLogin()
+    
 
        
 class UsuarioAdmin(State):
-    def __init__(self,lista_de_usuarios,lista_de_carros):
+    def __init__(self,lista_de_usuarios,lista_de_carros,context:UsuarioState):
        self.lista_de_usuarios = lista_de_usuarios
        self.lista_de_carros = lista_de_carros
+       self.context = context
 
     def alugar(self,usuario_atual):
           print("--- ALUGUEL  ---")
@@ -291,3 +340,16 @@ class UsuarioAdmin(State):
 
        for i,action in enumerate(opcoes):
             print("[{}] {}".format(i,action))
+    
+    def handleSessao(self,login,usuario_atual):
+          print("Encerrar sessão")
+          print("----------")
+          print("Tem certeza que quer deslogar no sistema?")
+          
+          aws = input("[s/n]> ").lower()
+
+          if(aws == "s"):
+            usuario_atual.deslogar()
+            login.setSession(False)
+            login.setUserInSession(None)
+            self.context.changeToNoLogin()
