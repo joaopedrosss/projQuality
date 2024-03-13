@@ -121,7 +121,6 @@ class State():
         pass
     
 
-
 class UsuarioSemLogin(State):
     def __init__(self,lista_de_usuarios,context:UsuarioState):
        self.lista_de_usuarios = lista_de_usuarios
@@ -236,9 +235,7 @@ class UsuarioComum(State):
             login.setSession(False)
             login.setUserInSession(None)
             self.context.changeToNoLogin()
-    
-
-       
+         
 class UsuarioAdmin(State):
     def __init__(self,lista_de_usuarios,lista_de_carros,context:UsuarioState):
        self.lista_de_usuarios = lista_de_usuarios

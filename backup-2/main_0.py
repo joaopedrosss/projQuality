@@ -99,12 +99,12 @@ while True:
   if(sair):
     break
 
-  if(login.getSession()): # _ COM LOGIN
+  if(login.getSession()): # _ Checar o login foi feito
     usuario_atual = login.getUserInSession()
     
     print("U: {} @{}".format(usuario_atual.getNome(),usuario_atual.getId()))
 
-    if(usuario_atual.getAdmin()): # _ COM LOGIN DE ADMIN
+    if(usuario_atual.getAdmin()): # _ Chegar se foi um usuário admin
       print("->[admin]\n--------")
       menu_de_admin.mostrar()
 
@@ -207,12 +207,10 @@ while True:
           else:
             usuario_atual.editarCarro(carro_selecionado)
 
-
         case 9: # EDITAR USUARIO
           usuario_escolhido = usuario_atual.selecionarEm(lista_de_usuarios)
 
           usuario_atual.editarUsuario(usuario_escolhido,lista_de_usuarios)
-
 
         case 11:
           usuario_atual.removeCarro(lista_de_carros)
@@ -234,7 +232,7 @@ while True:
             #menu_de_opcoes.limparTela()
             #pass
 
-    else: # _ COM LOGIN COMUM
+    else: # _  _ Chegar se foi um usuário comum
       print("--------")
       menu_de_usuario.mostrar()
 
@@ -363,8 +361,3 @@ while True:
         print("Ação invalida")
     
     menu_de_opcoes.limparTela()
-
-
-# _ COM LOGIN DE USUÁRIO
-
-# _ COM LOGIN DE ADMIN

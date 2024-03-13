@@ -186,7 +186,6 @@ while True:
       case _:
           print("Ação Inválida")
 
-    
     limparTela()    
 
 # _ COM LOGIN DE USUÁRIO
