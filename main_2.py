@@ -2,7 +2,7 @@ from Carro import Carro,ListaCarros
 from Usuario import Usuario, ListaUsuario,Admin
 from Menu import Menu,MenuUsuario, MenuAdmin
 from Login import Login
-
+from Usuario_State import UsuarioState
 
 def simOUnao(acao):
   
@@ -26,6 +26,8 @@ lista_de_usuarios = ListaUsuario()
 menu_de_opcoes = Menu()
 menu_de_usuario = MenuUsuario()
 menu_de_admin = MenuAdmin()
+
+
 
 
 login = Login()
@@ -83,14 +85,8 @@ usersFile.close()
 
 # _ TODO->ELIMINAR TRECHO ABAIXO (TESTES SOMENTE) 
 
-"""
-usuario_temp = Usuario()
-usuario_temp = usuario_temp.selecionarEm(lista_de_usuarios)
 
-login.setSession(True)
-login.setUserInSession(usuario_temp)
-menu_de_opcoes.limparTela()
-"""
+option = UsuarioState(lista_de_usuarios,lista_de_carros)
 
 # _ SEM LOGIN
 
@@ -104,7 +100,12 @@ while True:
     
     print("U: {} @{}".format(usuario_atual.getNome(),usuario_atual.getId()))
 
+    option.setUsuarioAtual(usuario_atual)
+
     if(usuario_atual.getAdmin()): # _ COM LOGIN DE ADMIN
+
+      option.changeToAdmin() # STATE
+
       print("->[admin]\n--------")
       menu_de_admin.mostrar()
 
@@ -128,97 +129,35 @@ while True:
             carros_encontrados = lista_de_carros.procurar(carro_procurado)
             lista_de_carros.mostrarCarrosEncontrados(carros_encontrados)
         
-        case 3: # ALUGUEL * 
-
-          print("--- ALUGUEL  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros)
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("alugar {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-
-              print("Para quem deseja alugar?")
-              print("[0] Eu mesmo")
-              print("[1] Outro usuário")
-
-              try:
-                alugarParaOutro = int(input("[0/1] >"))
-              except:
-                print("Valor inválido")
-
-              if(not(alugarParaOutro)):
-                usuario_atual.alugarCarro(carro_selecionado)
-              else:
-                usuario_para_alugar = usuario_atual.selecionarEm(lista_de_usuarios)
-
-                asw_1 = simOUnao("alugar '{}' para '{}'".format(carro_selecionado.mostrar(),usuario_para_alugar.getNome()))
-
-                if(asw_1):
-                  usuario_para_alugar.alugarCarro(carro_selecionado)
-                else:
-                  print("AÇÃO CANCELADA")
-
-            else:
-              print("AÇÃO CANCELADA!")
+        case 3: # ALUGUEL 
+          option.alugar()
 
         case 4: # DEVOLUÇÃO
-          print("--- DEVOLUÇÃO  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros) # TODO uma função filter?
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("devolver {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-              if(carro_selecionado.getDono() == usuario_atual.getId()):
-                usuario_atual.devolverCarro(carro_selecionado)
-              else:
-                usuario_escolhido = lista_de_usuarios.getById(carro_selecionado.getDono())
-
-                if(usuario_escolhido != None):
-                  usuario_escolhido.devolverCarro(carro_selecionado)
-                else:
-                  print("Não foi possível devolver o carro.")
-            else:
-              print("AÇÃO CANCELADA!")
+          option.devolver()
 
         case 5: # MOSTRAR USUÁRIOS 
 
           #lista_de_usuarios.mostrar()
-          usuario_atual.mostrarUsuarios(lista_de_usuarios)
+          option.mostrarUsuarios()
         
         case 6: # CADASTRAR CARRO 
-          usuario_atual.cadastarCarro(lista_de_carros)
+          option.cadastarCarro()
 
         case 8: # CADASTRAR USUÁRIO 
-          usuario_atual.cadastrarUsuario(lista_de_usuarios)
+          option.cadastrarUsuario()
         
         case 7: # EDITAR CARRO
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros)
-
-          if(carro_selecionado.getAlugado()):
-            print("Não é possível editar os dados de um carro já alugado.\nÉ preciso que o veículo seja devolvido antes.")
-          else:
-            usuario_atual.editarCarro(carro_selecionado)
+          option.editarCarro()
 
 
         case 9: # EDITAR USUARIO
-          usuario_escolhido = usuario_atual.selecionarEm(lista_de_usuarios)
-
-          usuario_atual.editarUsuario(usuario_escolhido,lista_de_usuarios)
-
+          option.editarUsuario()
 
         case 11:
-          usuario_atual.removeCarro(lista_de_carros)
+          option.removerCarro()
 
         case 10:
-          usuario_atual.removerUser(lista_de_usuarios)
+          option.removerUsuario()
 
         case 12:
           print("Encerrar sessão")
@@ -233,8 +172,23 @@ while True:
             login.setUserInSession(None)
             #menu_de_opcoes.limparTela()
             #pass
+            """
+            print("Encerrar sessão")
+          print("----------")
+          print("Tem certeza que quer deslogar no sistema?")
+          
+          aws = input("[s/n]> ").lower()
+
+          if(aws == "s"):
+            usuario_atual.deslogar()
+            login.setSession(False)
+            login.setUserInSession(None)
+            """
 
     else: # _ COM LOGIN COMUM
+
+      option.changeToComum() # STATE
+
       print("--------")
       menu_de_usuario.mostrar()
 
@@ -247,10 +201,10 @@ while True:
       match action:
         case 0:
           break
-        case 1: # MOSTRAR CARROS
+        case 1: # MOSTRAR CARROS *
           lista_de_carros.mostrar()
         
-        case 2: # PROCURAR CARROS
+        case 2: # PROCURAR CARROS *
           carro_procurado = lista_de_carros.criarCarroParaPesquisa()
         
           if(carro_procurado != None):
@@ -258,37 +212,13 @@ while True:
             lista_de_carros.mostrarCarrosEncontrados(carros_encontrados)
 
         case 3: # ALUGAR 
-          print("--- ALUGUEL  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros)
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("alugar {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-              usuario_atual.alugarCarro(carro_selecionado)
-            else:
-              print("AÇÃO CANCELADA!")
+          option.alugar()
 
         case 4: # DEVOLVER 
-          print("--- DEVOLUÇÃO  ---")
-          carro_selecionado = usuario_atual.selecionarEm(lista_de_carros) # TODO uma função filter?
-
-          if(carro_selecionado == None):
-            print("Não foi possível selecionar tal veículo")
-          else:
-            #print(carro_selecionado.mostrar())
-            asw = simOUnao("devolver {}".format(carro_selecionado.mostrar()))
-
-            if(asw):
-              usuario_atual.devolverCarro(carro_selecionado)
-            else:
-              print("AÇÃO CANCELADA!")
+          option.devolver()
         
         case 5:# VER CARROS 
-          usuario_atual.mostrarCarrosAlugados()
+          option.mostrarAluguados()
 
         case 6:
           print("Encerrar sessão")
